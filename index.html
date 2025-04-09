@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Shanghai Characters Network Visualization</title>
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f5f5;
+    }
+    .container {
+      display: flex;
+      height: 100vh;
+    }
+    #graph {
+      flex-grow: 1;
+      background-color: white;
+      border-right: 1px solid #ddd;
+    }
+    #details {
+      width: 300px;
+      padding: 15px;
+      overflow-y: auto;
+      box-shadow: -2px 0 5px rgba(0,0,0,0.1);
+    }
+    #search {
+      padding: 10px;
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 10;
+      background: white;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    #search input {
+      padding: 5px;
+      width: 200px;
+    }
+    .node {
+      cursor: pointer;
+    }
+    .link {
+      stroke: #999;
+      stroke-opacity: 0.6;
+    }
+    .gender-Male { fill: #1f77b4; }
+    .gender-Female { fill: #e377c2; }
+    .gender-Other { fill: #7f7f7f; }
+    h1 {
+      margin-top: 0;
+      font-size: 18px;
+    }
+    .legend {
+      position: absolute;
+      bottom: 10px;
+      left: 10px;
+      background: white;
+      padding: 10px;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+    .legend-color {
+      width: 15px;
+      height: 15px;
+      margin-right: 8px;
+      border-radius: 50%;
+    }
+  </style>
+</head>
+<body>
+  <div id="search">
+    <input type="text" id="searchInput" placeholder="Search characters...">
+  </div>
+  
+  <div class="container">
+    <div id="graph"></div>
+    <div id="details">
+      <h1>Character Details</h1>
+      <p>Click on a node to view character details</p>
+    </div>
+  </div>
+  
+  <div class="legend">
+    <h3 style="margin-top: 0; margin-bottom: 10px;">Legend</h3>
+    <div class="legend-item">
+      <div class="legend-color" style="background: #1f77b4;"></div>
+      <span>Male</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-color" style="background: #e377c2;"></div>
+      <span>Female</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-color" style="background: #7f7f7f;"></div>
+      <span>Other/Not specified</span>
+    </div>
+  </div>
+
+  <script>
+    // Load data
+    fetch('characters_data.json')
+      .then(response => response.json())
+      .then(data => createVisualization(data));
+
+    function createVisualization(data) {
+      const width = document.getElementById('graph').clientWidth;
+      const height = document.getElementById('graph').clientHeight;
+      
+      // Create SVG
+      const svg = d3.select('#graph')
+        .append('svg')
+        .attr('width', width)
+        .attr('height', height);
+      
+      // Create a group for the graph content
+      const g = svg.append('g');
+      
+      // Define zoom behavior
+      const zoom = d3.zoom()
+        .scaleExtent([0.1, 4])
+        .on('zoom', (event) => {
+          g.attr('transform', event.transform);
+        });
+      
+      svg.call(zoom);
+      
+      // Create the simulation
+      const simulation = d3.forceSimulation(data.nodes)
+        .force('link', d3.forceLink(data.links).id(d => d.id).distance(100))
+        .force('charge', d3.forceManyBody().strength(-300))
+        .force('center', d3.forceCenter(width / 2, height / 2))
+        .force('collision', d3.forceCollide().radius(30));
+        
+      // Add links
+      const link = g.append('g')
+        .attr('class', 'links')
+        .selectAll('line')
+        .data(data.links)
+        .enter().append('line')
+        .attr('class', 'link')
+        .attr('stroke-width', d => Math.sqrt(d.value || 1));
+      
+      // Define node groups
+      const node = g.append('g')
+        .attr('class', 'nodes')
+        .selectAll('g')
+        .data(data.nodes)
+        .enter().append('g')
+        .attr('class', 'node')
+        .on('click', showDetails)
+        .call(d3.drag()
+          .on('start', dragstarted)
+          .on('drag', dragged)
+          .on('end', dragended));
+      
+      // Add node circles
+      node.append('circle')
+        .attr('r', d => getNodeSize(d))
+        .attr('class', d => getGenderClass(d))
+        .append('title')
+        .text(d => d.name);
+      
+      // Add node labels
+      node.append('text')
+        .text(d => getShortName(d.name))
+        .attr('x', 0)
+        .attr('y', 4)
+        .attr('text-anchor', 'middle')
+        .attr('font-size', '10px')
+        .attr('fill', 'black')
+        .attr('stroke', 'white')
+        .attr('stroke-width', '0.5px');
+
+      // Search functionality
+      d3.select('#searchInput').on('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        
+        // Reset all nodes and links
+        node.style('opacity', 1);
+        link.style('opacity', 0.6);
+        
+        if (searchTerm) {
+          // Filter nodes by search term
+          const matching = data.nodes.filter(n => {
+            return (n.name && n.name.toLowerCase().includes(searchTerm)) ||
+                  (n.aliases && n.aliases.toLowerCase().includes(searchTerm)) ||
+                  (n.occupation && n.occupation.toLowerCase().includes(searchTerm));
+          });
+          
+          const matchingIds = new Set(matching.map(n => n.id));
+          
+          // Dim non-matching nodes
+          node.style('opacity', d => matchingIds.has(d.id) ? 1 : 0.2);
+          
+          // Dim non-relevant links
+          link.style('opacity', d => {
+            return matchingIds.has(d.source.id) || matchingIds.has(d.target.id) ? 0.8 : 0.1;
+          });
+          
+          // If one result found, show its details
+          if (matching.length === 1) {
+            showDetails(null, matching[0]);
+          }
+        }
+      });
+
+      // Update the simulation on tick
+      simulation.on('tick', () => {
+        link
+          .attr('x1', d => d.source.x)
+          .attr('y1', d => d.source.y)
+          .attr('x2', d => d.target.x)
+          .attr('y2', d => d.target.y);
+        
+        node.attr('transform', d => `translate(${d.x},${d.y})`);
+      });
+      
+      // Helper functions
+      function getGenderClass(d) {
+        if (!d.gender) return 'gender-Other';
+        // Check for female first to prevent 'female' matching on 'male' substring
+        if (d.gender.toLowerCase().includes('female')) return 'gender-Female';
+        if (d.gender.toLowerCase().includes('male')) return 'gender-Male';
+        return 'gender-Other';
+      }
+      
+      function getNodeSize(d) {
+        // Count the number of connections
+        const connections = data.links.filter(link => 
+          link.source.id === d.id || link.target.id === d.id
+        ).length;
+        
+        // Base size + connections factor (increased base size from 5 to 10)
+        return 10 + Math.sqrt(connections) * 3;
+      }
+      
+      function getShortName(name) {
+        if (!name) return '';
+        // Extract the first part before any parentheses or spaces
+        const match = name.match(/^([^\s\(]+)/);
+        return match ? match[0] : name.substring(0, 5);
+      }
+      
+      function showDetails(event, d) {
+        const details = document.getElementById('details');
+        let html = `<h1>${d.name || 'Unknown'}</h1>`;
+        
+        if (d.aliases) html += `<p><strong>Aliases:</strong> ${d.aliases}</p>`;
+        if (d.gender) html += `<p><strong>Gender:</strong> ${d.gender}</p>`;
+        if (d.nationality) html += `<p><strong>Nationality:</strong> ${d.nationality}</p>`;
+        if (d.political_affiliation) html += `<p><strong>Political:</strong> ${d.political_affiliation}</p>`;
+        if (d.occupation) html += `<p><strong>Occupation:</strong> ${d.occupation}</p>`;
+        if (d.age) html += `<p><strong>Age:</strong> ${d.age}</p>`;
+        if (d.summary) html += `<p><strong>Summary:</strong> ${d.summary}</p>`;
+        
+        // List connections
+        const connections = data.links.filter(link => 
+          link.source.id === d.id || link.target.id === d.id
+        );
+        
+        if (connections.length > 0) {
+          html += `<h2>Connections (${connections.length})</h2><ul>`;
+          connections.forEach(link => {
+            const other = link.source.id === d.id ? link.target : link.source;
+            html += `<li><strong>${other.name}</strong>`;
+            if (link.type || link.description) {
+              html += `: ${link.type || ''} ${link.description || ''}`;
+            }
+            html += `</li>`;
+          });
+          html += `</ul>`;
+        }
+        
+        details.innerHTML = html;
+      }
+      
+      function dragstarted(event, d) {
+        if (!event.active) simulation.alphaTarget(0.3).restart();
+        d.fx = d.x;
+        d.fy = d.y;
+      }
+      
+      function dragged(event, d) {
+        d.fx = event.x;
+        d.fy = event.y;
+      }
+      
+      function dragended(event, d) {
+        if (!event.active) simulation.alphaTarget(0);
+        d.fx = null;
+        d.fy = null;
+      }
+    }
+  </script>
+</body>
+</html>
