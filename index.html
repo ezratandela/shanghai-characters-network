@@ -51,6 +51,46 @@
     .gender-Male { fill: #1f77b4; }
     .gender-Female { fill: #e377c2; }
     .gender-Other { fill: #7f7f7f; }
+    
+    /* Nationality colors */
+    .nationality-Japanese { fill: #ff7f0e; }
+    .nationality-Chinese { fill: #2ca02c; }
+    .nationality-Russian { fill: #d62728; }
+    .nationality-British { fill: #9467bd; }
+    .nationality-American { fill: #8c564b; }
+    .nationality-Indian { fill: #e377c2; }
+    .nationality-French { fill: #7f7f7f; }
+    .nationality-German { fill: #bcbd22; }
+    .nationality-Western { fill: #17becf; }
+    .nationality-Mixed { fill: #aec7e8; }
+    .nationality-Unspecified { fill: #ffbb78; }
+    .nationality-Other { fill: #98df8a; }
+    
+    /* Political affiliation colors */
+    .political-Communist { fill: #d62728; }
+    .political-Nationalist { fill: #1f77b4; }
+    .political-Imperialist { fill: #9467bd; }
+    .political-Monarchist { fill: #8c564b; }
+    .political-Revolutionary { fill: #e377c2; }
+    .political-Labor { fill: #7f7f7f; }
+    .political-Bolshevik { fill: #bcbd22; }
+    .political-Radical { fill: #17becf; }
+    .political-Extremist { fill: #ff9896; }
+    .political-AntiCommunist { fill: #c5b0d5; }
+    .political-WhiteGuard { fill: #c49c94; }
+    .political-IndianNationalist { fill: #f7b6d2; }
+    .political-ProJapanese { fill: #c7c7c7; }
+    .political-AntiJapanese { fill: #dbdb8d; }
+    .political-AsiaIst { fill: #ffbb78; }
+    .political-Other { fill: #9edae5; }
+    
+    /* For split nodes */
+    .split-node-left {
+      clip-path: polygon(0% 0%, 50% 0%, 50% 100%, 0% 100%);
+    }
+    .split-node-right {
+      clip-path: polygon(50% 0%, 100% 0%, 100% 100%, 50% 100%);
+    }
     h1 {
       margin-top: 0;
       font-size: 18px;
@@ -80,6 +120,14 @@
 <body>
   <div id="search">
     <input type="text" id="searchInput" placeholder="Search characters...">
+    <div id="filters" style="margin-top: 10px;">
+      <label style="margin-right: 10px;">Color by: </label>
+      <select id="colorFilter" style="padding: 3px;">
+        <option value="gender">Gender</option>
+        <option value="nationality">Nationality</option>
+        <option value="political">Political Affiliation</option>
+      </select>
+    </div>
   </div>
   
   <div class="container">
@@ -92,17 +140,118 @@
   
   <div class="legend">
     <h3 style="margin-top: 0; margin-bottom: 10px;">Legend</h3>
-    <div class="legend-item">
-      <div class="legend-color" style="background: #1f77b4;"></div>
-      <span>Male</span>
+    <div id="gender-legend">
+      <div class="legend-item">
+        <div class="legend-color" style="background: #1f77b4;"></div>
+        <span>Male</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #e377c2;"></div>
+        <span>Female</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #7f7f7f;"></div>
+        <span>Other/Not specified</span>
+      </div>
     </div>
-    <div class="legend-item">
-      <div class="legend-color" style="background: #e377c2;"></div>
-      <span>Female</span>
+    
+    <div id="nationality-legend" style="display: none;">
+      <div class="legend-item">
+        <div class="legend-color" style="background: #ff7f0e;"></div>
+        <span>Japanese</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #2ca02c;"></div>
+        <span>Chinese</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #d62728;"></div>
+        <span>Russian</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #9467bd;"></div>
+        <span>British</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #8c564b;"></div>
+        <span>American</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #e377c2;"></div>
+        <span>Indian</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #7f7f7f;"></div>
+        <span>French</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #bcbd22;"></div>
+        <span>German</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #17becf;"></div>
+        <span>Western</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #aec7e8;"></div>
+        <span>Mixed</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #ffbb78;"></div>
+        <span>Unspecified</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #98df8a;"></div>
+        <span>Other</span>
+      </div>
     </div>
-    <div class="legend-item">
-      <div class="legend-color" style="background: #7f7f7f;"></div>
-      <span>Other/Not specified</span>
+    
+    <div id="political-legend" style="display: none;">
+      <div class="legend-item">
+        <div class="legend-color" style="background: #d62728;"></div>
+        <span>Communist</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #1f77b4;"></div>
+        <span>Nationalist</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #9467bd;"></div>
+        <span>Imperialist</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #c5b0d5;"></div>
+        <span>Anti-Communist</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #f7b6d2;"></div>
+        <span>Indian Nationalist</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #c49c94;"></div>
+        <span>White Guard</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #dbdb8d;"></div>
+        <span>Anti-Japanese</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #ffbb78;"></div>
+        <span>Asia-ist</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-color" style="background: #9edae5;"></div>
+        <span>Other</span>
+      </div>
+      <div class="legend-item">
+        <div style="display: flex; align-items: center;">
+          <div style="width: 30px; height: 15px; display: flex; margin-right: 8px; border-radius: 7.5px; overflow: hidden;">
+            <div style="width: 15px; height: 15px; background: #ffbb78;"></div>
+            <div style="width: 15px; height: 15px; background: #1f77b4;"></div>
+          </div>
+          <span>Multiple affiliations</span>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -163,12 +312,22 @@
           .on('drag', dragged)
           .on('end', dragended));
       
-      // Add node circles
-      node.append('circle')
-        .attr('r', d => getNodeSize(d))
-        .attr('class', d => getGenderClass(d))
-        .append('title')
-        .text(d => d.name);
+      // Add node circles - for single affiliation or gender/nationality modes
+      const nodeGroups = node.append('g')
+        .attr('class', 'node-shape');
+        
+      // We'll use this to add either a single circle or two half-circles
+      nodeGroups.each(function(d) {
+        const group = d3.select(this);
+        const radius = getNodeSize(d);
+        
+        // Add a base circle for all nodes (will be visible in gender and nationality modes)
+        group.append('circle')
+          .attr('r', radius)
+          .attr('class', d => getGenderClass(d))
+          .append('title')
+          .text(d => d.name);
+      });
       
       // Add node labels
       node.append('text')
@@ -181,6 +340,52 @@
         .attr('stroke', 'white')
         .attr('stroke-width', '0.5px');
 
+      // Color filter functionality
+      d3.select('#colorFilter').on('change', function() {
+        const filterValue = this.value;
+        
+        // Clear previous node shapes
+        node.selectAll('.node-shape').each(function(d) {
+          const group = d3.select(this);
+          group.selectAll('*').remove();
+          
+          const radius = getNodeSize(d);
+          
+          if (filterValue === 'political' && d.political_affiliation && d.political_affiliation.length > 1) {
+            // Create split node for multiple political affiliations
+            // Left half-circle
+            group.append('circle')
+              .attr('r', radius)
+              .attr('class', getPoliticalClassByValue(d.political_affiliation[0]) + ' split-node-left');
+              
+            // Right half-circle
+            group.append('circle')
+              .attr('r', radius)
+              .attr('class', getPoliticalClassByValue(d.political_affiliation[1]) + ' split-node-right');
+              
+            // Add title
+            group.append('title')
+              .text(d => d.name + ': ' + (d.political_affiliation ? d.political_affiliation.join(', ') : 'Unknown'));
+          } else {
+            // Single circle for other cases
+            group.append('circle')
+              .attr('r', radius)
+              .attr('class', d => {
+                if (filterValue === 'nationality') return getNationalityClass(d);
+                if (filterValue === 'political') return getPoliticalClass(d);
+                return getGenderClass(d);
+              })
+              .append('title')
+              .text(d => d.name);
+          }
+        });
+        
+        // Update legend visibility
+        d3.select('#gender-legend').style('display', filterValue === 'gender' ? 'block' : 'none');
+        d3.select('#nationality-legend').style('display', filterValue === 'nationality' ? 'block' : 'none');
+        d3.select('#political-legend').style('display', filterValue === 'political' ? 'block' : 'none');
+      });
+      
       // Search functionality
       d3.select('#searchInput').on('input', function() {
         const searchTerm = this.value.toLowerCase();
@@ -232,6 +437,58 @@
         if (d.gender.toLowerCase().includes('female')) return 'gender-Female';
         if (d.gender.toLowerCase().includes('male')) return 'gender-Male';
         return 'gender-Other';
+      }
+      
+      function getNationalityClass(d) {
+        if (!d.nationality || d.nationality.length === 0) return 'nationality-Unspecified';
+        
+        // Since nationality is now an array, use the first one for coloring
+        const nationality = d.nationality[0].toLowerCase();
+        
+        if (nationality.includes('japanese')) return 'nationality-Japanese';
+        if (nationality.includes('chinese')) return 'nationality-Chinese';
+        if (nationality.includes('russian') || nationality.includes('slavic')) return 'nationality-Russian';
+        if (nationality.includes('british') || nationality.includes('scottish')) return 'nationality-British';
+        if (nationality.includes('american')) return 'nationality-American';
+        if (nationality.includes('indian')) return 'nationality-Indian';
+        if (nationality.includes('french')) return 'nationality-French';
+        if (nationality.includes('german')) return 'nationality-German';
+        if (nationality.includes('western')) return 'nationality-Western';
+        if (nationality.includes('mixed')) return 'nationality-Mixed';
+        if (nationality.includes('unspecified')) return 'nationality-Unspecified';
+        
+        return 'nationality-Other';
+      }
+      
+      function getPoliticalClass(d) {
+        if (!d.political_affiliation || d.political_affiliation.length === 0) return 'political-Other';
+        
+        // Since political_affiliation is now an array, use the first one for coloring
+        return getPoliticalClassByValue(d.political_affiliation[0]);
+      }
+      
+      function getPoliticalClassByValue(political) {
+        if (!political) return 'political-Other';
+        
+        const politicalLower = political.toLowerCase();
+        
+        if (politicalLower.includes('communist')) return 'political-Communist';
+        if (politicalLower.includes('indian nationalist')) return 'political-IndianNationalist';
+        if (politicalLower.includes('nationalist') && !politicalLower.includes('indian')) return 'political-Nationalist';
+        if (politicalLower.includes('imperialist')) return 'political-Imperialist';
+        if (politicalLower.includes('monarchist')) return 'political-Monarchist';
+        if (politicalLower.includes('revolutionary')) return 'political-Revolutionary';
+        if (politicalLower.includes('labor')) return 'political-Labor';
+        if (politicalLower.includes('bolshevik')) return 'political-Bolshevik';
+        if (politicalLower.includes('radical')) return 'political-Radical';
+        if (politicalLower.includes('extremist')) return 'political-Extremist';
+        if (politicalLower.includes('anti-communist') || politicalLower.includes('anticommunist')) return 'political-AntiCommunist';
+        if (politicalLower.includes('white guard')) return 'political-WhiteGuard';
+        if (politicalLower.includes('pro-japanese')) return 'political-ProJapanese';
+        if (politicalLower.includes('anti-japanese')) return 'political-AntiJapanese';
+        if (politicalLower.includes('asia-ist')) return 'political-AsiaIst';
+        
+        return 'political-Other';
       }
       
       function getNodeSize(d) {
